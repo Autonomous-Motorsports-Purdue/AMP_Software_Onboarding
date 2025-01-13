@@ -134,7 +134,7 @@ Outline:
   * read a frame from the VideoCapture()  
   * Return the frame if it is not null
 
-**Completed Code**
+[**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/image_publisher.py)
 
 ### Object Detection
 
@@ -165,7 +165,7 @@ Outline:
     * Calculate and draw the centroid of the largest contour  
   * Return the modified image, the contour x coordinate, the contour y coordinate, and contour area
 
-**Completed Code**
+[**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/image_cv.py)
 
 ### Logger
 
@@ -197,7 +197,7 @@ Outline:
   * Get the current timestamp  
   * Write the row to the csv file: timestamp, object\_x, object\_y, contour\_area
 
-**Completed Code**
+[**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/log.py)
 
 ### Main Loop
 
@@ -224,3 +224,7 @@ Outline:
     * inputs=\[‘object\_x’, ‘object\_y’, ‘contour\_area’\]  
     * outputs=\[\]  
   * Start the vehicle with rate\_hz=30
+
+[**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/onboarding_runner.py)
+
+  
