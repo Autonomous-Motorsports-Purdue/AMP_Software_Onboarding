@@ -121,11 +121,6 @@ Install miniconda: [miniconda installation](https://docs.anaconda.com/miniconda/
 * Activate environment: `conda activate AMP`
 * Install requirements: `conda install --file requirements.txt`
 
-### Installing Donkeycar
-
-Windows: [https://docs.robocarstore.com/guide/host\_pc/setup\_windows/](https://docs.robocarstore.com/guide/host_pc/setup_windows/)  
-Other: [https://docs.donkeycar.com/guide/install\_software/\#step-1-install-software-on-host-pc](https://docs.donkeycar.com/guide/install_software/#step-1-install-software-on-host-pc)
-
 ### Image Publisher
 
 Inputs: N/A  
