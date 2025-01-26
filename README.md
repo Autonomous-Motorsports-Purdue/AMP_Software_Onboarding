@@ -108,6 +108,19 @@ It should contain these parts:
 
 It also needs a main loop
 
+### Clone Repository
+Create a new folder and clone this repository into it.
+
+* `git init`
+* `git clone https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding.git`
+
+### Install Conda
+Install miniconda: [miniconda installation](https://docs.anaconda.com/miniconda/install/#quick-command-line-install)
+
+* Create environment: `conda create -n AMP python=3.10`
+* Activate environment: `conda activate AMP`
+* Install requirements: `conda install --file requirements.txt`
+
 ### Installing Donkeycar
 
 Windows: [https://docs.robocarstore.com/guide/host\_pc/setup\_windows/](https://docs.robocarstore.com/guide/host_pc/setup_windows/)  
