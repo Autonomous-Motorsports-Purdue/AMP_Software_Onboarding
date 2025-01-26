@@ -13,3 +13,4 @@ if __name__ == "__main__":
     V.add(Logger(), inputs=['object_x', 'object_y', 'contour_area'], outputs=[])
 
     V.start(rate_hz=30)
+    
