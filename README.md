@@ -117,7 +117,7 @@ Create a new folder and clone this repository into it.
 ### Install Conda
 Install miniconda: [miniconda installation](https://docs.anaconda.com/miniconda/install/#quick-command-line-install)
 
-* Create environment: `conda create -n AMP python=3.10`
+* Create environment: `conda create -n AMP python=3.11`
 * Activate environment: `conda activate AMP`
 * Install requirements: `conda install --file requirements.txt`
 
