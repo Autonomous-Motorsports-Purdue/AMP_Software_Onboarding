@@ -2,6 +2,7 @@ conda-forge::pyfiglet
 conda-forge::numpy
 conda-forge::prettytable
 conda-forge::pillow
-conda-forge::opencv
+conda-forge::opencv==4.9.0
+
 
 
