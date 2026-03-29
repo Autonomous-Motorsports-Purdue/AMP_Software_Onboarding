@@ -12,7 +12,7 @@ This script:
 
 from queue import Queue
 from threading import Event, Thread, Lock
-from time import sleep
+from time import sleep, perf_counter
 from serial import Serial
 
 from pygnssutils.gnssstreamer import GNSSStreamer
@@ -30,7 +30,7 @@ class GPS:
         Initialize GPS with threading support for donkeycar.
         """
         # Configuration parameters (matching the CLI command)
-        self.serial_port = "COM5"
+        self.serial_port = "COM7"
         self.baudrate = 9600
         self.timeout = 3
 
@@ -66,12 +66,29 @@ class GPS:
                 'outqueue': self.out_queue
             }
         
+        self.ntrip_kwargs = {
+            "server": hostname,
+            "port": port,
+            "https": https,
+            "mountpoint": mountpoint,
+            "ntrip_user": self.ntrip_user,
+            "ntrip_password": self.ntrip_password,
+            "version": "2.0",
+            "ggamode": 0,
+            "ggainterval": self.gga_interval,
+            "datatype": "RTCM",
+            "output": self.out_queue
+        }
+        
         self.ser = Serial(self.serial_port, self.baudrate, timeout=self.timeout)
 
         self.gnss = GNSSStreamer('DONKEY', 
                                  self.ser,
                                  **streamer_kwargs)
+        self.ntrip = GNSSNTRIPClient("DONKEY", 
+                                     **self.ntrip_kwargs)
         
+        last_time = perf_counter()
 
     def update(self):
         self.gnss._read_loop(self.ser, 
@@ -80,6 +97,7 @@ class GPS:
                              inqueue=None, 
                              protfilter=7, 
                              kwargs=dict())
+        self.ntrip._read_thread(settings=self.ntrip_kwargs, stopevent=self.stop_event, output=self.out_queue)
         self.gnss._outqueue.put("TEST")
 
     def run_threaded(self):
@@ -88,6 +106,11 @@ class GPS:
             return None
         else:
             data = self.out_queue.get()
+            dt = perf_counter() - last_time
+            last_time = perf_counter()  
+            print(f"dt = {last_time}")
+            if data == "TEST":
+                return None
             print(data)
 
             return data.lat, data.lon, data.alt, data.numSV, data.diffAge
