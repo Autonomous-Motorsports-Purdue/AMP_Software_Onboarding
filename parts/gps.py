@@ -1,116 +1,173 @@
 #!/usr/bin/env python3
 """
-GNSS Streamer Python Script
-Equivalent to the gnssstreamer CLI command with NTRIP input and custom output handler.
+GNSS receiver part for Donkeycar.
 
-This script:
-1. Connects to a serial GNSS receiver on COM5
-2. Sets up an NTRIP client to receive RTCM corrections
-3. Filters for GNGGA messages
-4. Outputs parsed position data with fix status and correction age
+This part starts the pygnssutils GNSS reader and NTRIP client once, then
+returns the latest parsed GGA fix without blocking the vehicle loop.
 """
 
-from queue import Queue
-from threading import Event, Thread, Lock
-from time import sleep, perf_counter
+from queue import Empty, Queue
+from threading import Event, Lock
+from time import sleep
+
 from serial import Serial
 
-from pygnssutils.gnssstreamer import GNSSStreamer
+from pygnssutils.globals import FORMAT_PARSED
 from pygnssutils.gnssntripclient import GNSSNTRIPClient
+from pygnssutils.gnssstreamer import GNSSStreamer
 from pygnssutils.helpers import parse_url
-from pygnssutils.globals import (
-    CLIAPP,
-    FORMAT_PARSED,
-    ENCODE_NONE,
-)
+
 
 class GPS:
     def __init__(self):
-        """
-        Initialize GPS with threading support for donkeycar.
-        """
-        # Configuration parameters (matching the CLI command)
+        # Receiver configuration.
         self.serial_port = "COM7"
         self.baudrate = 9600
         self.timeout = 3
 
-        # NTRIP configuration
+        # NTRIP configuration.
         self.ntrip_url = "108.59.49.226:9000/MSM4_NEAR"
         self.ntrip_user = "automp1"
         self.ntrip_password = "automp1"
-        self.gga_interval = 10  # Send GGA to NTRIP server every 10 seconds
-        msg_filter = "GNGGA"
-
-        # Message filtering - only process GNGGA messages
+        self.gga_interval = 1 # number of seconds between sending messages back up to NTRIP.
         self.msg_filter = "GNGGA"
 
-        if not self.ntrip_url.startswith('http'):
-            self.ntrip_url = f'http://{self.ntrip_url}'
-    
-        prot, hostname, port, mountpoint = parse_url(self.ntrip_url)
-        https = 1 if prot == "https" else 0
+        if not self.ntrip_url.startswith("http"):
+            self.ntrip_url = f"http://{self.ntrip_url}"
 
-        self.out_queue = Queue()
-        self.stop_event = Event()
-
-        streamer_kwargs = {
-                'format': FORMAT_PARSED,  # Parse messages to objects
-                'validate': 1,  # Validate checksums
-                'msgmode': 0,  # GET mode
-                'parsebitfield': 1,  # Parse UBX bitfields
-                'encoding': ENCODE_NONE,  # No encoding
-                'quitonerror': 1,  # Log errors and continue
-                'protfilter': 7,  # NMEA + UBX + RTCM3 (1+2+4)
-                'msgfilter': msg_filter,  # Filter for GNGGA messages
-                'limit': 0,  # No message limit
-                'outqueue': self.out_queue
-            }
-        
-        self.ntrip_kwargs = {
+        protocol, hostname, port, mountpoint = parse_url(self.ntrip_url)
+        self.ntrip_settings = {
             "server": hostname,
             "port": port,
-            "https": https,
+            "https": 1 if protocol == "https" else 0,
             "mountpoint": mountpoint,
-            "ntrip_user": self.ntrip_user,
-            "ntrip_password": self.ntrip_password,
+            "ntripuser": self.ntrip_user,
+            "ntrippassword": self.ntrip_password,
             "version": "2.0",
             "ggamode": 0,
             "ggainterval": self.gga_interval,
             "datatype": "RTCM",
-            "output": self.out_queue
         }
-        
-        self.ser = Serial(self.serial_port, self.baudrate, timeout=self.timeout)
 
-        self.gnss = GNSSStreamer('DONKEY', 
-                                 self.ser,
-                                 **streamer_kwargs)
-        self.ntrip = GNSSNTRIPClient("DONKEY", 
-                                     **self.ntrip_kwargs)
-        
-        last_time = perf_counter()
+        self.gnss_queue = Queue()
+        self.stop_event = Event()
+        self.lock = Lock()
+        self.started = False
+        self.ser = None
+        self.gnss = None
+        self.ntrip = None
+        self.latest_output = (None, None, None, None, None, None, None)
+
+    def _start_streams(self):
+        with self.lock:
+            if self.started:
+                return
+
+            self.ser = Serial(self.serial_port, self.baudrate, timeout=self.timeout)
+            self.gnss = GNSSStreamer(
+                self,
+                self.ser,
+                outformat=FORMAT_PARSED,
+                validate=1,
+                msgmode=0,
+                parsebitfield=1,
+                quitonerror=1,
+                protfilter=7,
+                msgfilter=self.msg_filter,
+                limit=0,
+                outqueue=self.gnss_queue,
+                stopevent=self.stop_event,
+            )
+            self.ntrip = GNSSNTRIPClient(self)
+
+            self.gnss.run()
+            self.ntrip.run(
+                **self.ntrip_settings,
+                output=self.ser,
+                stopevent=self.stop_event,
+            )
+            self.started = True
+
+    def get_coordinates(self):
+        if self.gnss is None:
+            return {
+                "lat": 0.0,
+                "lon": 0.0,
+                "alt": 0.0,
+                "sep": 0.0,
+                "sip": 0,
+                "fix": "NO FIX",
+                "hdop": 0.0,
+                "diffage": 0,
+                "diffstation": 0,
+            }
+
+        status = self.gnss.get_coordinates()
+        return {
+            "lat": status.get("lat", 0.0),
+            "lon": status.get("lon", 0.0),
+            "alt": status.get("alt", 0.0),
+            "sep": status.get("sep", 0.0),
+            "sip": status.get("sip", 0),
+            "fix": status.get("fix", "NO FIX"),
+            "hdop": status.get("hdop", status.get("HDOP", status.get("hDOP", 0.0))),
+            "diffage": status.get("diffage", status.get("diffAge", 0)),
+            "diffstation": status.get("diffstation", status.get("diffStation", 0)),
+        }
+
+    def _drain_gnss_queue(self):
+        if self.gnss is None:
+            return
+
+        while True:
+            try:
+                data = self.gnss_queue.get_nowait()
+            except Empty:
+                break
+
+            if not hasattr(data, "identity"):
+                continue
+
+            status = self.get_coordinates()
+            with self.lock:
+                self.latest_output = (
+                    getattr(data, "lat", status.get("lat")),
+                    getattr(data, "lon", status.get("lon")),
+                    getattr(data, "alt", status.get("alt")),
+                    status.get("fix"),
+                    getattr(data, "diffAge", status.get("diffage")),
+                    getattr(data, "HDOP", getattr(data, "hDOP", status.get("hdop"))),
+                    getattr(data, "numSV", status.get("sip")),
+                )
+
+    def run(self):
+        self._start_streams()
+        self._drain_gnss_queue()
+        with self.lock:
+            return self.latest_output
 
     def update(self):
-        self.gnss._read_loop(self.ser, 
-                             stopevent=self.stop_event, 
-                             outqueue=self.out_queue, 
-                             inqueue=None, 
-                             protfilter=7, 
-                             kwargs=dict())
-        self.ntrip._read_thread(settings=self.ntrip_kwargs, stopevent=self.stop_event, output=self.out_queue)
-        self.gnss._outqueue.put("TEST")
+        self._start_streams()
+        while not self.stop_event.is_set():
+            self._drain_gnss_queue()
+            sleep(0.05)
 
     def run_threaded(self):
-        if self.out_queue.empty():
-            print("Queue empty")
-            return None
-        else:
-            data = self.out_queue.get()
-            dt = perf_counter() - last_time
-            last_time = perf_counter()  
-            print(f"dt = {last_time}")
-            if data == "TEST":
-                return None
-            print(data)
+        self._drain_gnss_queue()
+        with self.lock:
+            return self.latest_output
 
-            return data.lat, data.lon, data.alt, data.numSV, data.diffAge
+    def shutdown(self):
+        self.stop_event.set()
+
+        if self.ntrip is not None:
+            self.ntrip.stop()
+
+        if self.gnss is not None:
+            self.gnss.stop()
+
+        if self.ser is not None and self.ser.is_open:
+            self.ser.close()
+
+        with self.lock:
+            self.started = False
