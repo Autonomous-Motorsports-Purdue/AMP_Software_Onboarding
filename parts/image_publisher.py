@@ -5,7 +5,6 @@ class Image_Publisher():
         self.cap = cv2.VideoCapture(0)
         self.frame = None
     def run(self):
-        print("running")
         ret, self.frame = self.cap.read()
         if self.frame is not None:
             # cv2.imshow("Image", self.frame)
