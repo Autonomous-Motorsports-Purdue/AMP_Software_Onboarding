@@ -1,18 +1,24 @@
+## Table of Contents
+* [Overview](#overview)
+* [Project](#project)
+---
 ## Overview
 
-We use the donkeycar stack on our kart. Donkeycar provides the software architecture for the kart. Donkeycar uses different parts which have inputs and outputs. These parts can be added to a vehicle. The vehicle loop runs the parts in order and stores and modifies data in the vehicle memory.
+We use the DonkeyCar framework on our kart. Donkeycar provides the software architecture for the kart. Donkeycar uses different parts which have inputs and outputs. These parts can be added to a vehicle. The vehicle loop runs the parts in order and stores and modifies data in the vehicle memory. Each part has a `run()` function which is called during each iteration of the vehicle loop.
 
-Here is more information on donkeycar: [donkeycar](https://docs.donkeycar.com/)
+Here is more information on DonkeyCar: [DonkeyCar](https://docs.donkeycar.com/)
 
-Here is a link to our current software architecture: [github link](https://github.com/Autonomous-Motorsports-Purdue/AMP_ASS_donkeycar?tab=readme-ov-file)
+Here is a link to our 2024-25 software architecture: [github link](https://github.com/Autonomous-Motorsports-Purdue/AMP_ASS_donkeycar?tab=readme-ov-file)
 
-The kart currently has these parts:
+The stack consisted of these parts:
 
 * Frame Publisher  
 * Heartbeat  
 * Segment Model  
 * Logger  
 * UART Driver
+
+**Read through each section and the linked code to understand the components of a DonkeyCar part.** Then complete the project section. 
 
 ### Frame Publisher
 
@@ -24,7 +30,7 @@ Outputs:
 * sensors/ZED/RGB/Left  
 * sensors/ZED/RGB/Right
 
-This part reads in and publishes the current left and right frames on the ZED camera.
+This part reads in and publishes the current left and right frames on the ZED camera. Note how the camera is initialized in the `__init__()` function and how the frames are returned in `run()`. 
 
 ### Heartbeat
 
@@ -68,7 +74,7 @@ Inputs:
 
 Outputs: N/A
 
-Logs the current image, segmented image, centroid, steering, and throttle values. Saves the images in a folder and stores the image paths and other data in a CSV file.
+Logs the current image, segmented image, centroid, steering, and throttle values. Saves the images in a folder and stores the image paths and other data in a CSV file. Note how the `csvfile` and `csvwriter` are created in the `__init__()` function and how the data is written as the csv in `run()`.
 
 ### UART Driver
 
@@ -96,6 +102,8 @@ Writes the throttle and steering commands over serial to the STM which actuates 
 
 The main loop instantiates and adds all of the parts to the vehicle. It executes each part sequentially in the order they were added to the vehicle. Each loop executes the parts in the same order. 
 
+---
+
 ## Project
 
 Create the parts and drive loop for simple object detection.
@@ -106,7 +114,7 @@ It should contain these parts:
 * Object Detection  
 * Logger
 
-It also needs a main loop
+It also needs a main loop.
 
 ### Clone Repository
 Create a new folder and clone this repository into it.
@@ -128,8 +136,7 @@ Outputs:
 
 * image
 
-This part should read images from your webcam and return them in the run function. The run function is what runs each time the part is called in the drive loop. It takes in inputs and returns outputs in the vehicle memory. 
-
+This part should read images from your webcam and return them in the run function. The run function is what runs each time the part is called in the drive loop. It takes in inputs and returns outputs in the vehicle memory.  Use [Frame Publisher](#frame-publisher) as a reference
 Outline:
 
 * Create a file called image\_publisher.py in the parts directory.   
@@ -142,7 +149,7 @@ Outline:
   * read a frame from the VideoCapture()  
   * Return the frame if it is not null
 
-[**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/image_publisher.py)
+<!-- [**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/image_publisher.py) -->
 
 ### Object Detection
 
@@ -157,7 +164,7 @@ Outputs:
 * object\_y  
 * contour\_area
 
-This part should detect objects on the inputted image. It should identify objects in the image and return the coordinates of the largest contour by area. It should also return the area of the largest contour.
+This part should detect objects on the inputted image. It should identify objects in the image and return the coordinates of the largest contour by area. It should also return the area of the largest contour. Use these [OpenCV Contour Detection](https://learnopencv.com/contour-detection-using-opencv-python-c/), [Finding Contour Center](https://www.geeksforgeeks.org/python/python-opencv-find-center-of-contour/) for reference.
 
 Outline:
 
@@ -173,7 +180,7 @@ Outline:
     * Calculate and draw the centroid of the largest contour  
   * Return the modified image, the contour x coordinate, the contour y coordinate, and contour area
 
-[**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/image_cv.py)
+<!-- [**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/image_cv.py) -->
 
 ### Logger
 
@@ -191,10 +198,10 @@ Writes the current timestamp, object\_x, object\_y, and contour\_area to a CSV f
 
 Outline:
 
+* Create a file called log.py  
 * Imports  
   * datetime  
   * csv  
-* Create a file called log.py  
 * Create a class called Logger  
 * Create an \_\_init\_\_() method  
   * Open a file object with filename “logger.csv” in writemode with newline=’’  
@@ -205,7 +212,7 @@ Outline:
   * Get the current timestamp  
   * Write the row to the csv file: timestamp, object\_x, object\_y, contour\_area
 
-[**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/log.py)
+<!-- [**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/parts/log.py) -->
 
 ### Main Loop
 
@@ -213,26 +220,28 @@ Instantiates the vehicle and adds parts to it. The program runs in an infinite l
 
 Outline:
 
+* Create a file `onboarding_runner.py`
 * Imports  
   * donkeycar  
     * *This will be dependent on the path which donkeycar was cloned into your directory*  
-  * Image\_Publisher  
-  * Object\_Detection  
-  * Logger  
+  * `Image_Publisher`
+  * `Object_Detection`  
+  * `Logger`
     * *these will be imported from the files in your parts directory*  
-* if \_\_name\_\_ \== “\_\_main\_\_”:  
+* `if __name__ == __main__:  ` 
   * Create a donkeycar vehicle  
-  * instantiate an Image\_Publisher() and add it to the vehicle.   
-    * inputs=\[\]  
-    * outputs=\[‘image’\]  
-  * instantiate an Object\_Detection() and add it to the vehicle   
-    * inputs=\[‘image\]  
-    * outputs=\[‘image\_cv’, ‘object\_x’, ‘object\_y’, ‘contour\_area’\]  
-  * instantiate a Logger() and add it to the vehicle  
-    * inputs=\[‘object\_x’, ‘object\_y’, ‘contour\_area’\]  
-    * outputs=\[\]  
-  * Start the vehicle with rate\_hz=30
+  * instantiate an `Image_Publisher()` and add it to the vehicle.   
+    * inputs=`[]`
+    * outputs=`[‘image’]`  
+  * instantiate an `Object_Detection()` and add it to the vehicle   
+    * inputs=`['image']` 
+    * outputs=`['image_cv', 'object_x', 'object_y', 'contour_area']`  
+  * instantiate a `Logger()` and add it to the vehicle  
+    * inputs=`['object_x', 'object_y', 'contour_area']`  
+    * outputs=`[]` 
+  * Start the vehicle with `rate_hz=30`
 
-[**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/onboarding_runner.py)
+When you have finished, compare your implementation with the example code in `completed/`.
+<!-- [**Completed Code**](https://github.com/Autonomous-Motorsports-Purdue/AMP_Software_Onboarding/blob/main/onboarding_runner.py) -->
 
   

@@ -1,48 +1,33 @@
 import cv2
 
 class Object_Detection():
-    # def __init__():
 
     def run(self, image):
-        if image is not None:
+        # Check if input image is not None
+        pass
             # Convert to grayscale
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            pass
             # Convert to binary - convert all pixels with values less than 127 to 0 and greater than 127 to 255
-            ret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+            pass
 
             # Detect Contours
-            contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-            # Draw Contours
-            # cv2.drawContours(image, contours, -1, (0,255,0),2)
-            # cv2.imshow("Contours", image)
-            # cv2.waitKey(1)
-
+            pass
 
             # Find Largest Contour
-            maxContour = None
-            maxArea = 0
-            for contour in contours:
-                area = cv2.contourArea(contour)
-                if area > maxArea:
-                    maxArea = area
-                    maxContour = contour
+            pass
+
             # Draw largest contour
-            cv2.drawContours(image, [maxContour], 0, (255,0,0), 2)
+            pass
 
-            # Draw Contour centroid
-            M = cv2.moments(maxContour)
+            # Find contour moments
+            pass
 
-            # Calculate the centroid of the contour
-            if M["m00"] != 0:
-                cX = int(M["m10"] / M["m00"])
-                cY = int(M["m01"] / M["m00"])
+            # Calculate the centroid of the contour with moments
+            pass
             
             # Draw centroid
-            cv2.circle(image, (cX, cY), 5, (0,0,255),-1)
-            cv2.imshow("Contour", image)
-            cv2.waitKey(1)
+            pass
 
-            return image, cX, cY, maxArea
-
+            # Return image, centroid_x, centroid_y, max_area
+            pass
             

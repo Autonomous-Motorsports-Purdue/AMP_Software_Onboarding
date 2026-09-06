@@ -1,16 +1,24 @@
 import donkeycar.donkeycar as dk
 
-from parts.image_publisher import Image_Publisher
-from parts.image_cv import Object_Detection
-from parts.log import Logger
+# import parts
+# from parts.file_name import Class_name
 
 if __name__ == "__main__":
     V = dk.vehicle.Vehicle()
     print("starting")
 
-    V.add(Image_Publisher(), inputs=[], outputs=['image'])
-    V.add(Object_Detection(), inputs=['image'], outputs=['image_cv', 'object_x', 'object_y', 'contour_area'])
-    V.add(Logger(), inputs=['object_x', 'object_y', 'contour_area'], outputs=[])
+    # Add classes to vehicle memory
+    # V.add(Class_Name(), inputs=['input',...], outputs=['image',...])
 
-    V.start(rate_hz=30)
+    # Add Image_publisher() to vehicle memory
+    pass
+
+    # Add Object_Detection() to vehicle memory
+    pass
+    
+    # Add Logger() to vehicle memory
+    pass
+
+    # Start vehicle main loop
+    # V.start(rate_hz=x)
     
